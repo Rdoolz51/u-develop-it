@@ -117,6 +117,97 @@ app.post('/api/candidate', ({ body }, res) => {
     });
 });
 
+//get all parties
+app
+    .route('/api/parties')
+    .get((req, res) => {
+        const sql = `SELECT * FROM parties`;
+
+        db.query(sql, (err, rows) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({
+                message: 'Success!',
+                data: rows
+            });
+        });
+    });
+
+//get single party
+app
+    .route('/api/party/:id')
+    .get((req, res) => {
+        const sql = `SELECT * FROM parties WHERE id = ?`;
+        const params = [req.params.id];
+
+        db.query(sql, params, (err, row) => {
+            if (err) {
+                res.status(400).json({ error: err.message });
+                return;
+            }
+            res.json({
+                message: 'Success!',
+                data: row
+            });
+        });
+    });
+
+app
+    .route('/api/party/:id')
+    .delete((req, res) => {
+        const sql = `DELETE FROM parties WHERE id = ?`;
+        const params = [req.params.id];
+
+        db.query(sql, params, (err, result) => {
+            if (err) {
+                res.status(400).json({ error: res.message });
+            } else if (!result.affectedRows) {
+                res.json({
+                    message: 'Party not found!'
+                });
+            } else {
+                res.json({
+                    message: 'Success!',
+                    changes: result.affectedRows,
+                    id: req.params.id
+                });
+            }
+        });
+    });
+
+app
+    .route('/api/candidate/:id')
+    .put((req, res) => {
+        const errors = inputCheck(req.body, 'party_id');
+
+        if (errors) {
+            res.status(400).json({ error: errors });
+            return;
+        }
+
+        const sql = `UPDATE candidates SET party_id = ?
+                     WHERE id = ?`;
+        const params = [req.body.party_id, req.params.id];
+
+        db.query(sql, params, (err, result) => {
+            if (err) {
+                res.status(400).json({ error: err.message });
+            } else if (!result.affectedRows) {
+                res.json({
+                    message: 'Candidate not found!'
+                });
+                res.json({
+                    message: 'Success!',
+                    data: req.body,
+                    changes: result.affectedRows
+                });
+            }
+        });
+    });
+
+
 app.use((req, res) => {
     res.status(404).end();
 });
